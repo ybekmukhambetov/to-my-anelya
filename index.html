@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Анеля</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-1: #fff5f8;
+    --bg-2: #ffe5ee;
+    --bg-3: #ffd5e0;
+    --pink: #ff6b9d;
+    --pink-deep: #c44569;
+    --pink-soft: #ffb3c8;
+    --pink-pale: #ffd9e4;
+    --ink: #2d1820;
+    --ink-soft: #6b4c5a;
+    --ink-mute: rgba(45, 24, 32, 0.5);
+    --glass-bg: rgba(255, 255, 255, 0.55);
+    --glass-border: rgba(255, 255, 255, 0.8);
+    --glass-shadow: 0 8px 32px rgba(196, 69, 105, 0.12);
+    --radius: 28px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    min-height: 100%;
+    overflow-x: hidden;
+    color: var(--ink);
+    font-family: 'Manrope', sans-serif;
+    font-weight: 300;
+    background: var(--bg-1);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ============ ФОН ============ */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 10%, var(--bg-3), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% 70%, var(--pink-pale), transparent 60%),
+      linear-gradient(180deg, var(--bg-1), var(--bg-2));
+  }
+
+  /* Парящие розовые "капли" — Liquid Glass blobs */
+  .blobs { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+  .blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.55;
+    animation: blobFloat 18s ease-in-out infinite;
+  }
+  .blob.b1 {
+    width: 420px; height: 420px;
+    background: radial-gradient(circle, var(--pink-soft), transparent 70%);
+    top: -100px; left: -150px;
+    animation-duration: 22s;
+  }
+  .blob.b2 {
+    width: 380px; height: 380px;
+    background: radial-gradient(circle, var(--pink), transparent 70%);
+    bottom: -120px; right: -100px;
+    animation-duration: 26s;
+    animation-delay: -8s;
+    opacity: 0.35;
+  }
+  .blob.b3 {
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, #ffd0e8, transparent 70%);
+    top: 40%; left: 30%;
+    animation-duration: 20s;
+    animation-delay: -4s;
+  }
+  @keyframes blobFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33%      { transform: translate(40px, -40px) scale(1.08); }
+    66%      { transform: translate(-30px, 30px) scale(0.95); }
+  }
+
+  /* Тонкие искры — минимально */
+  .dots { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
+  .dot-particle {
+    position: absolute;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--pink);
+    opacity: 0;
+    animation: dotFade 5s infinite ease-in-out;
+  }
+  @keyframes dotFade {
+    0%, 100% { opacity: 0; transform: scale(0.5); }
+    50%      { opacity: 0.5; transform: scale(1); }
+  }
+
+  /* ============ ШАПКА ВВЕРХУ ============ */
+  .header {
+    position: fixed;
+    top: 24px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    padding: 10px 24px;
+    border-radius: 999px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,0.9);
+    display: flex;
+    gap: 18px;
+    align-items: center;
+  }
+  .header .h-text {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .header .h-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--pink);
+    box-shadow: 0 0 8px var(--pink);
+    animation: pulse 2s infinite ease-in-out;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.6; }
+    50%      { opacity: 1; }
+  }
+
+  /* ============ СЦЕНЫ ============ */
+  .scene {
+    position: relative; z-index: 5;
+    min-height: 100vh;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 120px 24px 60px;
+    width: 100%;
+  }
+  .scene.active { display: flex; animation: sceneIn 0.9s cubic-bezier(.2,.7,.4,1); }
+  @keyframes sceneIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* === Glass-helpers === */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    box-shadow:
+      var(--glass-shadow),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      inset 0 -1px 0 rgba(255, 107, 157, 0.05);
+  }
+
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: var(--pink-deep);
+    opacity: 0.85;
+  }
+
+  /* ===================== HERO / GATE ===================== */
+  .hero-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    text-align: center;
+    max-width: 600px;
+  }
+  .hero-name {
+    font-family: 'Manrope', sans-serif;
+    font-size: clamp(72px, 14vw, 140px);
+    font-weight: 200;
+    letter-spacing: -0.04em;
+    line-height: 0.95;
+    background: linear-gradient(135deg, var(--pink-deep) 0%, var(--pink) 50%, #ff8aaa 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    margin: -20px 0;
+  }
+  .hero-sub {
+    font-size: clamp(16px, 2.5vw, 19px);
+    font-weight: 300;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    max-width: 460px;
+  }
+
+  /* Кнопки */
+  .yes-no-wrap {
+    position: relative;
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    height: 64px;
+    align-items: center;
+  }
+  .btn {
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 18px 42px;
+    cursor: pointer;
+    border: none;
+    border-radius: 999px;
+    transition: all 0.4s cubic-bezier(.2,.7,.4,1);
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  .btn-yes {
+    background: linear-gradient(135deg, var(--pink-deep), var(--pink));
+    color: white;
+    box-shadow:
+      0 10px 30px rgba(196, 69, 105, 0.3),
+      0 0 0 1px rgba(255, 255, 255, 0.2) inset,
+      0 -2px 8px rgba(255, 255, 255, 0.25) inset;
+  }
+  .btn-yes:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 15px 40px rgba(196, 69, 105, 0.45),
+      0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+  }
+  .btn-yes:active { transform: translateY(0); }
+  .btn-no {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    color: var(--ink-soft);
+    box-shadow: 0 4px 16px rgba(196, 69, 105, 0.08), inset 0 1px 0 rgba(255,255,255,0.9);
+    position: fixed;
+    z-index: 50;
+    transition: transform 0.18s cubic-bezier(.34,1.56,.64,1), left 0.2s ease, top 0.2s ease;
+  }
+
+  /* ===================== МУЗЕЙ ===================== */
+  .museum-content {
+    width: 100%;
+    max-width: 1100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+  }
+  .museum-head {
+    text-align: center;
+  }
+  .museum-head h2 {
+    font-size: clamp(40px, 6vw, 56px);
+    font-weight: 200;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    margin-top: 8px;
+    line-height: 1;
+  }
+
+  /* === 3D Coverflow === */
+  .coverflow {
+    width: 100%;
+    height: clamp(380px, 60vw, 540px);
+    perspective: 1400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: pan-y;
+  }
+  .coverflow:active { cursor: grabbing; }
+  .cf-track {
+    position: relative;
+    width: clamp(240px, 38vw, 320px);
+    height: 100%;
+    transform-style: preserve-3d;
+  }
+  .cf-slide {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    border-radius: 32px;
+    overflow: hidden;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow:
+      0 25px 60px rgba(196, 69, 105, 0.18),
+      0 0 0 1px rgba(255, 255, 255, 0.5) inset,
+      0 1px 0 rgba(255, 255, 255, 0.95) inset;
+    transition: transform 0.85s cubic-bezier(.2,.7,.4,1), opacity 0.6s ease;
+    will-change: transform, opacity;
+    transform-origin: center;
+  }
+  .cf-slide img,
+  .cf-slide video {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  /* Горизонтальные фотки — показываем полностью, без обрезки */
+  .cf-slide.horizontal {
+    background:
+      linear-gradient(135deg, var(--pink-pale), var(--bg-2));
+  }
+  .cf-slide.horizontal img,
+  .cf-slide.horizontal video {
+    object-fit: contain;
+    background: transparent;
+  }
+  /* Кристальный refraction-блик сверху */
+  .cf-slide::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 50%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 2;
+  }
+  /* Стеклянный rim снизу */
+  .cf-slide::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 30%;
+    background: linear-gradient(0deg, rgba(196,69,105,0.15) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* Лоадер */
+  .museum-loader {
+    text-align: center;
+    color: var(--ink-mute);
+    font-size: 13px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    transition: opacity 0.6s ease;
+  }
+  .museum-loader.hide { opacity: 0; pointer-events: none; }
+  .loader-dots { display: inline-flex; gap: 6px; margin-bottom: 14px; }
+  .loader-dots span {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--pink);
+    animation: loaderBounce 1.2s infinite ease-in-out;
+  }
+  .loader-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loader-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes loaderBounce {
+    0%, 80%, 100% { opacity: 0.3; transform: scale(0.7); }
+    40%           { opacity: 1;   transform: scale(1.2); }
+  }
+
+  /* Контролы */
+  .cf-controls {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .cf-arrow {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: var(--glass-bg);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    color: var(--pink-deep);
+    font-size: 22px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(196, 69, 105, 0.12), inset 0 1px 0 rgba(255,255,255,0.9);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cf-arrow:hover {
+    transform: scale(1.08);
+    background: var(--pink);
+    color: white;
+    box-shadow: 0 6px 24px rgba(196, 69, 105, 0.35);
+  }
+  .cf-arrow:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .cf-counter {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    letter-spacing: 2px;
+    min-width: 60px;
+    text-align: center;
+  }
+  .cf-counter b {
+    font-weight: 600;
+    color: var(--pink-deep);
+  }
+
+  /* Дотики */
+  .cf-dots {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: rgba(196, 69, 105, 0.18);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    padding: 0;
+  }
+  .dot.active {
+    background: var(--pink);
+    transform: scale(1.6);
+    box-shadow: 0 0 8px rgba(255, 107, 157, 0.5);
+  }
+
+  .continue-btn {
+    margin-top: 8px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 16px 40px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid var(--pink-soft);
+    color: var(--pink-deep);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(.2,.7,.4,1);
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+    box-shadow: 0 4px 16px rgba(196, 69, 105, 0.08), inset 0 1px 0 rgba(255,255,255,0.9);
+  }
+  .continue-btn.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  .continue-btn:hover {
+    background: linear-gradient(135deg, var(--pink-deep), var(--pink));
+    color: white;
+    border-color: transparent;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(196, 69, 105, 0.35);
+  }
+
+  /* ===================== FINALE ===================== */
+  .finale-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+    width: 100%;
+    max-width: 640px;
+  }
+
+  /* Букет */
+  .bouquet-wrap {
+    position: relative;
+    width: clamp(220px, 38vw, 320px);
+    aspect-ratio: 220 / 280;
+  }
+  .bouquet-svg {
+    width: 100%; height: 100%;
+    filter: drop-shadow(0 10px 30px rgba(196, 69, 105, 0.25));
+    animation: bouquetSway 5s ease-in-out infinite;
+  }
+  @keyframes bouquetSway {
+    0%, 100% { transform: rotate(-1.5deg); }
+    50%      { transform: rotate(1.5deg); }
+  }
+  .bouquet-img {
+    width: 100%; height: 100%;
+    object-fit: contain;
+    filter:
+      drop-shadow(0 15px 40px rgba(196, 69, 105, 0.35))
+      drop-shadow(0 0 50px rgba(255, 107, 157, 0.4))
+      drop-shadow(0 0 80px rgba(255, 179, 200, 0.3));
+    animation: bouquetBreathe 6s ease-in-out infinite, bouquetGlow 4s ease-in-out infinite;
+    transition: transform 0.4s cubic-bezier(.2,.7,.3,1.4), filter 0.5s ease;
+    will-change: transform;
+  }
+  @keyframes bouquetBreathe {
+    0%, 100% { transform: translateY(0) rotate(-1.5deg) scale(1); }
+    25%      { transform: translateY(-4px) rotate(0.5deg) scale(1.01); }
+    50%      { transform: translateY(0) rotate(1.5deg) scale(1); }
+    75%      { transform: translateY(-2px) rotate(-0.5deg) scale(1.01); }
+  }
+  @keyframes bouquetGlow {
+    0%, 100% { filter:
+      drop-shadow(0 15px 40px rgba(196, 69, 105, 0.3))
+      drop-shadow(0 0 40px rgba(255, 107, 157, 0.35))
+      drop-shadow(0 0 60px rgba(255, 179, 200, 0.25)); }
+    50%      { filter:
+      drop-shadow(0 15px 40px rgba(196, 69, 105, 0.4))
+      drop-shadow(0 0 60px rgba(255, 107, 157, 0.55))
+      drop-shadow(0 0 100px rgba(255, 179, 200, 0.4)); }
+  }
+  .bouquet-wrap:hover .bouquet-img {
+    filter:
+      drop-shadow(0 20px 50px rgba(196, 69, 105, 0.5))
+      drop-shadow(0 0 70px rgba(255, 107, 157, 0.7))
+      drop-shadow(0 0 120px rgba(255, 179, 200, 0.5));
+  }
+  .bouquet-wrap::before {
+    content: '';
+    position: absolute;
+    bottom: -10%; left: 10%;
+    width: 80%; height: 30%;
+    background: radial-gradient(ellipse at center, rgba(255, 107, 157, 0.4), transparent 70%);
+    filter: blur(20px);
+    z-index: -1;
+    animation: glowPulse 4s ease-in-out infinite;
+  }
+  @keyframes glowPulse {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50%      { opacity: 1;   transform: scale(1.15); }
+  }
+  .bouquet-orbit { position: absolute; inset: 0; pointer-events: none; }
+  .orbit-spark {
+    position: absolute;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--pink);
+    box-shadow: 0 0 10px var(--pink), 0 0 18px rgba(255, 179, 200, 0.6);
+    animation: orbitFloat 6s ease-in-out infinite;
+  }
+  @keyframes orbitFloat {
+    0%, 100% { transform: translate(0, 0) scale(0.6); opacity: 0; }
+    20%      { opacity: 1; }
+    50%      { transform: translate(var(--ox, 30px), var(--oy, -40px)) scale(1.2); opacity: 1; }
+    80%      { opacity: 1; }
+  }
+  .falling-petal {
+    position: absolute;
+    width: 12px; height: 12px;
+    background: radial-gradient(ellipse at 30% 30%, var(--pink-soft), var(--pink-deep) 80%);
+    border-radius: 150% 0 150% 0;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* Письмо */
+  .letter-card {
+    width: 100%;
+    padding: 50px 44px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    border-radius: 32px;
+    box-shadow:
+      0 30px 80px rgba(196, 69, 105, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  }
+  .greeting {
+    font-size: clamp(40px, 6vw, 56px);
+    font-weight: 200;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    line-height: 1;
+    margin: 8px 0 28px;
+  }
+  .typewriter {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 300;
+    font-size: clamp(15px, 2vw, 17px);
+    line-height: 1.85;
+    white-space: pre-wrap;
+    min-height: 200px;
+    color: var(--ink);
+    text-align: left;
+    letter-spacing: 0.1px;
+  }
+  .typewriter::after {
+    content: '|';
+    color: var(--pink);
+    animation: blink 1s infinite;
+    font-weight: 200;
+  }
+  .typewriter.done::after { content: ''; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .signature {
+    display: block;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--pink-deep);
+    margin-top: 28px;
+    text-align: right;
+    opacity: 0;
+    transition: opacity 1.5s ease 0.5s;
+  }
+  .signature.show { opacity: 1; }
+
+  /* Музыка */
+  .music-card {
+    width: 100%;
+    padding: 22px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    box-shadow: 0 12px 40px rgba(196, 69, 105, 0.12), inset 0 1px 0 rgba(255,255,255,0.95);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 1s ease 1s, transform 1s ease 1s;
+  }
+  .music-card.show { opacity: 1; transform: translateY(0); }
+  .music-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    color: var(--ink-soft);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .music-title .vinyl,
+  .vinyl {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 50% 50%,
+        var(--pink) 14%, transparent 16%, transparent 22%,
+        var(--pink-soft) 24%, transparent 26%, transparent 32%,
+        var(--pink-soft) 34%, transparent 36%);
+    background-color: var(--ink);
+    flex-shrink: 0;
+    animation: spin 4s linear infinite;
+    box-shadow: 0 0 10px rgba(196, 69, 105, 0.25);
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Custom audio player */
+  .player-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .player-play-btn {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--pink-deep), var(--pink));
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: white;
+    box-shadow: 0 8px 24px rgba(196, 69, 105, 0.35);
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
+  }
+  .player-play-btn:hover {
+    transform: scale(1.06);
+    box-shadow: 0 12px 32px rgba(196, 69, 105, 0.45);
+  }
+  .player-play-btn:active { transform: scale(0.96); }
+  .player-play svg { width: 20px; height: 20px; display: block; }
+  .player-info { flex: 1; min-width: 0; }
+  .player-track {
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--ink);
+    letter-spacing: 0.2px;
+  }
+  .player-artist {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 2px;
+    letter-spacing: 0.5px;
+  }
+  .player-progress {
+    margin-top: 14px;
+    width: 100%;
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(196, 69, 105, 0.12);
+    overflow: hidden;
+  }
+  .player-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--pink-deep), var(--pink));
+    transition: width 0.3s linear;
+  }
+
+  /* Котик P.S. */
+  .cat-card {
+    width: 100%;
+    max-width: 360px;
+    margin-top: 30px;
+    padding: 28px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    border-radius: 28px;
+    box-shadow: 0 20px 50px rgba(196, 69, 105, 0.15), inset 0 1px 0 rgba(255,255,255,0.95);
+    text-align: center;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 1.2s ease, transform 1.2s ease;
+  }
+  .cat-card.show { display: flex; opacity: 1; transform: translateY(0); }
+  .cat-frame {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 22px;
+    overflow: hidden;
+    background: var(--bg-2);
+    box-shadow: 0 10px 30px rgba(196, 69, 105, 0.18);
+    position: relative;
+  }
+  .cat-frame img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    animation: catAlive 4s ease-in-out infinite;
+    transform-origin: center 70%;
+  }
+  @keyframes catAlive {
+    0%, 100% { transform: scale(1) rotate(-1deg); filter: hue-rotate(0deg) brightness(1); }
+    25%      { transform: scale(1.04) rotate(0deg) translateY(-3px); filter: brightness(1.05); }
+    50%      { transform: scale(1) rotate(1deg); filter: hue-rotate(2deg) brightness(1); }
+    75%      { transform: scale(1.03) rotate(0deg) translateY(-2px); filter: brightness(1.04); }
+  }
+  .cat-frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 80%, rgba(255, 107, 157, 0.15), transparent 60%);
+    pointer-events: none;
+    animation: catGlow 3s ease-in-out infinite;
+  }
+  @keyframes catGlow {
+    0%, 100% { opacity: 0.4; }
+    50%      { opacity: 0.9; }
+  }
+  .cat-text {
+    font-size: 14px;
+    color: var(--ink-soft);
+    letter-spacing: 0.3px;
+    font-weight: 300;
+  }
+
+  /* Финал */
+  .final-message {
+    text-align: center;
+    margin-top: 12px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 1.5s ease 0.4s, transform 1.5s ease 0.4s;
+  }
+  .final-message.show { opacity: 1; transform: translateY(0); }
+  .final-message h2 {
+    font-size: clamp(56px, 10vw, 96px);
+    font-weight: 200;
+    letter-spacing: -0.04em;
+    background: linear-gradient(135deg, var(--pink-deep) 0%, var(--pink) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+  }
+  .final-message p {
+    font-size: clamp(15px, 2vw, 17px);
+    font-weight: 300;
+    color: var(--ink-soft);
+    line-height: 1.7;
+    margin-top: 12px;
+  }
+
+  /* Кнопка музыки в углу */
+  .music-toggle {
+    position: fixed;
+    top: 24px; right: 24px;
+    z-index: 100;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--glass-bg);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    color: var(--pink-deep);
+    box-shadow: var(--glass-shadow);
+  }
+  .music-toggle.show { display: flex; }
+  .music-toggle:hover {
+    transform: scale(1.08);
+    background: var(--pink);
+    color: white;
+  }
+  .music-toggle svg { width: 18px; height: 18px; fill: currentColor; }
+
+  @media (max-width: 700px) {
+    .scene { padding: 100px 18px 50px; }
+    .header .h-text { font-size: 10px; letter-spacing: 3px; }
+    .letter-card { padding: 36px 24px; }
+    .cf-arrow { width: 42px; height: 42px; font-size: 18px; }
+    .btn { padding: 16px 32px; font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="blobs">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+</div>
+<div class="dots" id="dots"></div>
+
+<button class="music-toggle" id="musicToggle" aria-label="музыка">
+  <svg viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
+</button>
+
+<audio id="audio" loop preload="auto">
+  <source src="photos/Dominic Fike - White Keys.mp3" type="audio/mpeg">
+  <source src="photos/whitekeys.mp3" type="audio/mpeg">
+  <source src="photos/music.mp3" type="audio/mpeg">
+</audio>
+
+<main>
+
+  <!-- =========== HERO =========== -->
+  <section class="scene active" id="sceneGate">
+    <div class="hero-content">
+      <h1 class="hero-name">Анеля</h1>
+      <p class="hero-sub">У меня для тебя кое-что есть</p>
+
+      <div class="yes-no-wrap" id="yesNoWrap">
+        <button class="btn btn-yes" id="btnYes">Открыть</button>
+        <button class="btn btn-no" id="btnNo">Закрыть</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========== МУЗЕЙ =========== -->
+  <section class="scene" id="sceneMuseum">
+    <div class="museum-content">
+      <div class="coverflow" id="coverflow">
+        <div class="museum-loader" id="museumLoader">
+          <div class="loader-dots"><span></span><span></span><span></span></div>
+          <div>собираю наши моменты</div>
+        </div>
+        <div class="cf-track" id="cfTrack"></div>
+      </div>
+
+      <div class="cf-controls">
+        <button class="cf-arrow" id="navPrev" aria-label="назад">‹</button>
+        <div class="cf-counter"><b id="cfCurrent">1</b> / <span id="cfTotal">0</span></div>
+        <button class="cf-arrow" id="navNext" aria-label="далее">›</button>
+      </div>
+
+      <div class="cf-dots" id="cfDots"></div>
+
+      <button class="continue-btn" id="continueBtn">читать письмо →</button>
+    </div>
+  </section>
+
+  <!-- =========== FINALE =========== -->
+  <section class="scene" id="sceneFinale">
+    <div class="finale-content">
+
+      <div class="bouquet-wrap" id="bouquetWrap">
+        <svg class="bouquet-svg" viewBox="0 0 220 280" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="ranWhite" cx="0.4" cy="0.4">
+              <stop offset="0%" stop-color="#fff8f0"/>
+              <stop offset="40%" stop-color="#ffe5d8"/>
+              <stop offset="100%" stop-color="#d4a890"/>
+            </radialGradient>
+            <radialGradient id="ranPink" cx="0.4" cy="0.4">
+              <stop offset="0%" stop-color="#ffd5d5"/>
+              <stop offset="50%" stop-color="#f8a8b8"/>
+              <stop offset="100%" stop-color="#a85068"/>
+            </radialGradient>
+            <radialGradient id="ranPeach" cx="0.4" cy="0.4">
+              <stop offset="0%" stop-color="#ffe8d0"/>
+              <stop offset="50%" stop-color="#f5b890"/>
+              <stop offset="100%" stop-color="#a07050"/>
+            </radialGradient>
+            <radialGradient id="ranCream" cx="0.4" cy="0.4">
+              <stop offset="0%" stop-color="#fff8e0"/>
+              <stop offset="50%" stop-color="#f0d49a"/>
+              <stop offset="100%" stop-color="#a08550"/>
+            </radialGradient>
+            <linearGradient id="vaseGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#fff5e8"/>
+              <stop offset="40%" stop-color="#f5d4a8"/>
+              <stop offset="100%" stop-color="#a8804a"/>
+            </linearGradient>
+          </defs>
+
+          <ellipse cx="110" cy="100" rx="85" ry="70" fill="rgba(255, 107, 157, 0.18)">
+            <animate attributeName="opacity" values="0.4;0.7;0.4" dur="4s" repeatCount="indefinite"/>
+          </ellipse>
+
+          <g stroke="#5a6a30" stroke-width="2.2" stroke-linecap="round" fill="none" opacity="0.85">
+            <path d="M 110 195 Q 105 150 88 110"/>
+            <path d="M 110 195 Q 113 150 130 100"/>
+            <path d="M 110 195 Q 100 155 70 130"/>
+            <path d="M 110 195 Q 120 155 150 125"/>
+            <path d="M 110 195 Q 110 150 110 90"/>
+          </g>
+          <g fill="#6e7a3f" opacity="0.85">
+            <ellipse cx="92" cy="138" rx="11" ry="5" transform="rotate(-30 92 138)"/>
+            <ellipse cx="128" cy="130" rx="11" ry="5" transform="rotate(35 128 130)"/>
+            <ellipse cx="80" cy="160" rx="10" ry="4" transform="rotate(-50 80 160)"/>
+            <ellipse cx="140" cy="160" rx="10" ry="4" transform="rotate(50 140 160)"/>
+          </g>
+
+          <!-- РАНУНКУЛУС 1 -->
+          <g transform="translate(110 90)">
+            <ellipse cx="0" cy="-22" rx="11" ry="14" fill="url(#ranWhite)" opacity="0.85"/>
+            <ellipse cx="20" cy="-10" rx="11" ry="14" fill="url(#ranWhite)" transform="rotate(60)" opacity="0.85"/>
+            <ellipse cx="20" cy="10" rx="11" ry="14" fill="url(#ranWhite)" transform="rotate(120)" opacity="0.85"/>
+            <ellipse cx="0" cy="22" rx="11" ry="14" fill="url(#ranWhite)" transform="rotate(180)" opacity="0.85"/>
+            <ellipse cx="-20" cy="10" rx="11" ry="14" fill="url(#ranWhite)" transform="rotate(240)" opacity="0.85"/>
+            <ellipse cx="-20" cy="-10" rx="11" ry="14" fill="url(#ranWhite)" transform="rotate(300)" opacity="0.85"/>
+            <circle r="20" fill="url(#ranWhite)" opacity="0.95"/>
+            <circle r="11" fill="#fdebd0"/>
+            <circle r="6" fill="#f4d8a0"/>
+            <circle r="3" fill="#c89a48"/>
+          </g>
+          <!-- РАНУНКУЛУС 2 -->
+          <g transform="translate(70 130)">
+            <ellipse cx="0" cy="-18" rx="9" ry="12" fill="url(#ranPink)" opacity="0.85"/>
+            <ellipse cx="16" cy="-8" rx="9" ry="12" fill="url(#ranPink)" transform="rotate(60)" opacity="0.85"/>
+            <ellipse cx="16" cy="8" rx="9" ry="12" fill="url(#ranPink)" transform="rotate(120)" opacity="0.85"/>
+            <ellipse cx="0" cy="18" rx="9" ry="12" fill="url(#ranPink)" transform="rotate(180)" opacity="0.85"/>
+            <ellipse cx="-16" cy="8" rx="9" ry="12" fill="url(#ranPink)" transform="rotate(240)" opacity="0.85"/>
+            <ellipse cx="-16" cy="-8" rx="9" ry="12" fill="url(#ranPink)" transform="rotate(300)" opacity="0.85"/>
+            <circle r="16" fill="url(#ranPink)" opacity="0.95"/>
+            <circle r="9" fill="#f8b8c8"/>
+            <circle r="5" fill="#e88aa0"/>
+            <circle r="2.5" fill="#a04060"/>
+          </g>
+          <!-- РАНУНКУЛУС 3 -->
+          <g transform="translate(150 125)">
+            <ellipse cx="0" cy="-18" rx="9" ry="12" fill="url(#ranPeach)" opacity="0.85"/>
+            <ellipse cx="16" cy="-8" rx="9" ry="12" fill="url(#ranPeach)" transform="rotate(60)" opacity="0.85"/>
+            <ellipse cx="16" cy="8" rx="9" ry="12" fill="url(#ranPeach)" transform="rotate(120)" opacity="0.85"/>
+            <ellipse cx="0" cy="18" rx="9" ry="12" fill="url(#ranPeach)" transform="rotate(180)" opacity="0.85"/>
+            <ellipse cx="-16" cy="8" rx="9" ry="12" fill="url(#ranPeach)" transform="rotate(240)" opacity="0.85"/>
+            <ellipse cx="-16" cy="-8" rx="9" ry="12" fill="url(#ranPeach)" transform="rotate(300)" opacity="0.85"/>
+            <circle r="16" fill="url(#ranPeach)" opacity="0.95"/>
+            <circle r="9" fill="#f8c8a0"/>
+            <circle r="5" fill="#e8a878"/>
+            <circle r="2.5" fill="#a06840"/>
+          </g>
+          <!-- РАНУНКУЛУС 4 -->
+          <g transform="translate(88 110)">
+            <ellipse cx="0" cy="-15" rx="7" ry="10" fill="url(#ranCream)" opacity="0.85"/>
+            <ellipse cx="13" cy="-7" rx="7" ry="10" fill="url(#ranCream)" transform="rotate(60)" opacity="0.85"/>
+            <ellipse cx="13" cy="7" rx="7" ry="10" fill="url(#ranCream)" transform="rotate(120)" opacity="0.85"/>
+            <ellipse cx="0" cy="15" rx="7" ry="10" fill="url(#ranCream)" transform="rotate(180)" opacity="0.85"/>
+            <ellipse cx="-13" cy="7" rx="7" ry="10" fill="url(#ranCream)" transform="rotate(240)" opacity="0.85"/>
+            <ellipse cx="-13" cy="-7" rx="7" ry="10" fill="url(#ranCream)" transform="rotate(300)" opacity="0.85"/>
+            <circle r="13" fill="url(#ranCream)" opacity="0.95"/>
+            <circle r="7" fill="#f4d8a0"/>
+            <circle r="3" fill="#a88848"/>
+          </g>
+          <!-- РАНУНКУЛУС 5 -->
+          <g transform="translate(130 100)">
+            <ellipse cx="0" cy="-15" rx="7" ry="10" fill="url(#ranPink)" opacity="0.85"/>
+            <ellipse cx="13" cy="-7" rx="7" ry="10" fill="url(#ranPink)" transform="rotate(60)" opacity="0.85"/>
+            <ellipse cx="13" cy="7" rx="7" ry="10" fill="url(#ranPink)" transform="rotate(120)" opacity="0.85"/>
+            <ellipse cx="0" cy="15" rx="7" ry="10" fill="url(#ranPink)" transform="rotate(180)" opacity="0.85"/>
+            <ellipse cx="-13" cy="7" rx="7" ry="10" fill="url(#ranPink)" transform="rotate(240)" opacity="0.85"/>
+            <ellipse cx="-13" cy="-7" rx="7" ry="10" fill="url(#ranPink)" transform="rotate(300)" opacity="0.85"/>
+            <circle r="13" fill="url(#ranPink)" opacity="0.95"/>
+            <circle r="7" fill="#f8b8c8"/>
+            <circle r="3" fill="#a04060"/>
+          </g>
+
+          <path d="M 70 195 Q 60 200 62 220 Q 64 240 70 255 Q 75 268 90 270 L 130 270 Q 145 268 150 255 Q 156 240 158 220 Q 160 200 150 195 Z"
+                fill="url(#vaseGrad)" stroke="#a8804a" stroke-width="1"/>
+          <ellipse cx="110" cy="195" rx="40" ry="6" fill="#a8804a" opacity="0.5"/>
+          <ellipse cx="110" cy="194" rx="40" ry="5" fill="#d4a574"/>
+        </svg>
+      </div>
+
+      <div class="letter-card">
+        <span class="eyebrow">письмо</span>
+        <div class="greeting">Моя Анеля</div>
+        <div class="typewriter" id="typewriter"></div>
+        <div class="signature" id="signature">Еля</div>
+      </div>
+
+      <div class="music-card" id="musicCard">
+        <div class="player-row">
+          <button class="player-play-btn" aria-label="play/pause">
+            <span class="player-play"></span>
+          </button>
+          <div class="player-info">
+            <div class="player-track">White Keys</div>
+            <div class="player-artist">Dominic Fike</div>
+          </div>
+          <div class="vinyl"></div>
+        </div>
+        <div class="player-progress">
+          <div class="player-progress-fill"></div>
+        </div>
+      </div>
+
+      <div class="final-message" id="finalMessage">
+        <h2>Я люблю тебя</h2>
+        <p>спасибо, что ты есть в моей жизни.<br>твой Еля</p>
+      </div>
+
+      <div class="cat-card" id="catCard">
+        <span class="eyebrow">p.s.</span>
+        <div class="cat-frame">
+          <img id="catImg" alt="кот">
+        </div>
+        <p class="cat-text">и кот тоже передаёт привет</p>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // ============ НАСТРОЙКИ ============
+  const HER_NAME    = "Анеля";
+  const MY_NAME     = "Еля";
+  const MUSIC_FILES = [
+    'photos/Dominic Fike - White Keys.mp3',
+    'Dominic Fike - White Keys.mp3',
+    'photos/whitekeys.mp3',
+    'whitekeys.mp3',
+    'photos/music.mp3',
+    'music.mp3'
+  ];
+  const CAT_CANDIDATES = [
+    'photos/cat.webp', 'photos/cat.gif', 'photos/cat.png', 'photos/cat.jpg',
+    'cat.webp', 'cat.gif', 'cat.png', 'cat.jpg'
+  ];
+  const MAX_PHOTOS  = 20;
+  const FLOWERS_CANDIDATES = [
+    'photos/0.jpg', 'photos/0.jpeg', 'photos/0.png', 'photos/0.webp',
+    'flowers.jpg', 'flowers.jpeg', 'flowers.png', 'flowers.webp',
+    'bouquet.jpg', 'bouquet.png', 'bouquet.webp'
+  ];
+  const LETTER_TEXT =
+`Прости меня.
+
+Прости, что уделял тебе мало внимания. Что иногда уходил в себя, когда тебе нужно было, чтобы я был рядом. Что не всегда находил время сказать самые важные слова.
+
+Я очень боюсь тебя потерять. И именно поэтому пишу это сейчас.
+
+Ты лучшее, что со мной случилось. И я хочу, чтобы ты это чувствовала каждый день, не только словами, а тем, что я рядом, что слышу тебя, что ты для меня на первом месте.
+
+Я хочу всё исправить. Больше тебя обнимать, больше тебя слушать, больше тебя радовать. Быть тем человеком, рядом с которым тебе спокойно и тепло.
+
+Я люблю тебя.`;
+  // ====================================
+
+  // ---------- Минимальные искры ----------
+  const dotsBox = document.getElementById('dots');
+  for (let i = 0; i < 30; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot-particle';
+    d.style.left = Math.random() * 100 + 'vw';
+    d.style.top  = Math.random() * 100 + 'vh';
+    d.style.animationDelay = Math.random() * 5 + 's';
+    d.style.animationDuration = (3 + Math.random() * 4) + 's';
+    dotsBox.appendChild(d);
+  }
+
+  // ---------- Утилиты загрузки ----------
+  async function fileExists(src) {
+    try {
+      const r = await fetch(src, { method: 'HEAD', cache: 'no-store' });
+      return r.ok;
+    } catch (e) { return null; }
+  }
+  function tryImage(src) {
+    return new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => resolve(src);
+      img.onerror = () => resolve(null);
+      img.src = src;
+    });
+  }
+  function tryLoadVideo(src) {
+    return new Promise(resolve => {
+      const v = document.createElement('video');
+      v.muted = true;
+      v.preload = 'metadata';
+      let done = false;
+      const finish = (val) => { if (!done) { done = true; resolve(val); } };
+      v.onloadedmetadata = () => finish(src);
+      v.onerror          = () => finish(null);
+      setTimeout(() => finish(null), 1500);
+      v.src = src;
+    });
+  }
+  async function checkFile(src, kind) {
+    const head = await fileExists(src);
+    if (head === true)  return src;
+    if (head === false) return null;
+    return kind === 'img' ? tryImage(src) : tryLoadVideo(src);
+  }
+
+  // ---------- Котик ----------
+  (async () => {
+    for (const src of CAT_CANDIDATES) {
+      const ok = await checkFile(src, 'img');
+      if (ok) {
+        document.getElementById('catImg').src = ok;
+        return;
+      }
+    }
+    // не нашли — скрываем карточку полностью
+    const card = document.getElementById('catCard');
+    if (card) card.style.display = 'none';
+  })();
+
+  // ---------- Букет ----------
+  async function setupBouquet() {
+    const wrap = document.getElementById('bouquetWrap');
+    for (const candidate of FLOWERS_CANDIDATES) {
+      const ok = await checkFile(candidate, 'img');
+      if (!ok) continue;
+      wrap.innerHTML = `
+        <img class="bouquet-img" src="${ok}" alt="ранункулусы">
+        <div class="bouquet-orbit"></div>
+      `;
+      const img = wrap.querySelector('.bouquet-img');
+      const orbit = wrap.querySelector('.bouquet-orbit');
+
+      let targetX = 0, targetY = 0, currX = 0, currY = 0;
+      wrap.addEventListener('mousemove', e => {
+        const r = wrap.getBoundingClientRect();
+        targetX = ((e.clientX - r.left) / r.width - 0.5) * 16;
+        targetY = ((e.clientY - r.top)  / r.height - 0.5) * 16;
+      });
+      wrap.addEventListener('mouseleave', () => { targetX = 0; targetY = 0; });
+      function animateParallax() {
+        currX += (targetX - currX) * 0.08;
+        currY += (targetY - currY) * 0.08;
+        if (Math.abs(currX) > 0.1 || Math.abs(currY) > 0.1) {
+          img.style.transform = `translate(${currX}px, ${currY}px)`;
+        }
+        requestAnimationFrame(animateParallax);
+      }
+      animateParallax();
+
+      function spawnSpark() {
+        if (!document.getElementById('sceneFinale').classList.contains('active')) return;
+        const s = document.createElement('div');
+        s.className = 'orbit-spark';
+        s.style.left = (30 + Math.random() * 40) + '%';
+        s.style.top  = (30 + Math.random() * 40) + '%';
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 60 + Math.random() * 80;
+        s.style.setProperty('--ox', Math.cos(angle) * dist + 'px');
+        s.style.setProperty('--oy', Math.sin(angle) * dist + 'px');
+        s.style.animationDuration = (4 + Math.random() * 3) + 's';
+        orbit.appendChild(s);
+        setTimeout(() => s.remove(), 7500);
+      }
+      setInterval(spawnSpark, 800);
+
+      function dropPetal() {
+        if (!document.getElementById('sceneFinale').classList.contains('active')) return;
+        const p = document.createElement('div');
+        p.className = 'falling-petal';
+        p.style.left = (25 + Math.random() * 50) + '%';
+        p.style.top  = (20 + Math.random() * 40) + '%';
+        wrap.appendChild(p);
+        const driftX = (Math.random() * 80 - 40);
+        const fallY = 220 + Math.random() * 80;
+        const rot   = (Math.random() * 720 - 360);
+        const dur   = 3500 + Math.random() * 2000;
+        p.animate([
+          { transform: 'translate(0, 0) rotate(0deg)', opacity: 0 },
+          { transform: `translate(${driftX*0.3}px, 30px) rotate(${rot*0.2}deg)`, opacity: 1, offset: 0.15 },
+          { transform: `translate(${driftX}px, ${fallY}px) rotate(${rot}deg)`, opacity: 0 }
+        ], { duration: dur, easing: 'cubic-bezier(.4,.1,.6,1)' });
+        setTimeout(() => p.remove(), dur);
+      }
+      setInterval(dropPetal, 2000);
+      return;
+    }
+  }
+  setupBouquet();
+
+  // ---------- Убегающая "Нет" ----------
+  const btnNo = document.getElementById('btnNo');
+  function placeNoNextToYes() {
+    const yes = document.getElementById('btnYes');
+    if (!yes) return;
+    const r = yes.getBoundingClientRect();
+    btnNo.style.left = (r.right + 12) + 'px';
+    btnNo.style.top = (r.top + r.height / 2 - btnNo.offsetHeight / 2) + 'px';
+  }
+  window.addEventListener('load', placeNoNextToYes);
+  window.addEventListener('resize', () => { if (!noEscaped) placeNoNextToYes(); });
+
+  let noEscaped = false;
+  function escapeNo(fromX, fromY) {
+    noEscaped = true;
+    const w = window.innerWidth, h = window.innerHeight;
+    const bw = btnNo.offsetWidth, bh = btnNo.offsetHeight;
+    const margin = 20;
+    let nx, ny, tries = 0;
+    do {
+      nx = margin + Math.random() * (w - bw - margin * 2);
+      ny = margin + Math.random() * (h - bh - margin * 2);
+      tries++;
+    } while (tries < 10 && Math.hypot(nx + bw/2 - fromX, ny + bh/2 - fromY) < 220);
+    btnNo.style.left = nx + 'px';
+    btnNo.style.top  = ny + 'px';
+    btnNo.style.transform = `rotate(${(Math.random() * 30 - 15)}deg)`;
+    setTimeout(() => { btnNo.style.transform = ''; }, 280);
+  }
+  btnNo.addEventListener('mouseenter', e => escapeNo(e.clientX, e.clientY));
+  btnNo.addEventListener('mouseover',  e => escapeNo(e.clientX, e.clientY));
+  btnNo.addEventListener('focus', () => {
+    const r = btnNo.getBoundingClientRect();
+    escapeNo(r.left + r.width/2, r.top + r.height/2);
+    btnNo.blur();
+  });
+  btnNo.addEventListener('touchstart', e => {
+    e.preventDefault();
+    const t = e.touches[0];
+    escapeNo(t.clientX, t.clientY);
+  }, { passive: false });
+  function proximityCheck(x, y) {
+    const r = btnNo.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top  + r.height / 2;
+    if (Math.hypot(x - cx, y - cy) < 90) escapeNo(x, y);
+  }
+  window.addEventListener('mousemove',  e => proximityCheck(e.clientX, e.clientY));
+  window.addEventListener('touchmove', e => {
+    if (e.touches[0]) proximityCheck(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+  btnNo.addEventListener('click', e => {
+    e.preventDefault();
+    escapeNo(e.clientX || window.innerWidth/2, e.clientY || window.innerHeight/2);
+  });
+
+  // ---------- Переключение сцен ----------
+  function showScene(id) {
+    document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ---------- Кнопка "Открыть" → музей ----------
+  document.getElementById('btnYes').addEventListener('click', () => {
+    btnNo.style.display = 'none';
+    // Если автоплей был заблокирован — этот клик его разблокирует
+    if (audio.paused && audio.src) audio.play().catch(()=>{});
+    showScene('sceneMuseum');
+    loadMuseum().catch(err => console.error('Museum load error:', err));
+  });
+
+  // ============ COVERFLOW ============
+  let museumPhotos = [];
+  let cfIndex = 0;
+  let cfAutoTimer = null;
+  let cfPaused = false;
+
+  async function loadMuseum() {
+    const track = document.getElementById('cfTrack');
+    const dotsBox = document.getElementById('cfDots');
+    const loader = document.getElementById('museumLoader');
+
+    const imgExts = ['jpg', 'jpeg', 'png', 'webp'];
+    const vidExts = ['mp4', 'mov', 'webm', 'MOV', 'MP4'];
+    const checks = [];
+    for (let i = 1; i <= MAX_PHOTOS; i++) {
+      for (const ext of imgExts) {
+        checks.push(checkFile(`photos/${i}.${ext}`, 'img').then(s => s && { idx: i, kind: 'img', src: s }));
+      }
+      for (const ext of vidExts) {
+        checks.push(checkFile(`photos/${i}.${ext}`, 'vid').then(s => s && { idx: i, kind: 'vid', src: s }));
+      }
+    }
+    const results = (await Promise.all(checks)).filter(Boolean);
+    const seen = new Set();
+    const found = [];
+    for (const it of results) {
+      const key = it.idx + ':' + it.kind;
+      if (!seen.has(key)) { seen.add(key); found.push(it); }
+    }
+    found.sort((a, b) => a.idx - b.idx || (a.kind === 'img' ? -1 : 1));
+    museumPhotos = found;
+
+    console.log(`[museum] found ${found.length} files:`, found.map(r => r.src));
+
+    loader.classList.add('hide');
+
+    if (found.length === 0) {
+      loader.classList.remove('hide');
+      loader.innerHTML = '<div>файлы не найдены — проверь папку photos/</div>';
+      return;
+    }
+
+    document.getElementById('cfTotal').textContent = found.length;
+
+    found.forEach((it, idx) => {
+      const slide = document.createElement('div');
+      slide.className = 'cf-slide';
+      slide.dataset.idx = idx;
+      slide.innerHTML = it.kind === 'vid'
+        ? `<video src="${it.src}" muted loop playsinline preload="metadata"></video>`
+        : `<img src="${it.src}" alt="">`;
+      slide.addEventListener('click', () => {
+        if (idx === cfIndex) return;
+        cfPaused = true;
+        goCoverflow(idx);
+      });
+
+      // Определяем aspect ratio — горизонтальные не обрезаются
+      const media = slide.querySelector('img, video');
+      const checkAspect = () => {
+        const w = media.naturalWidth || media.videoWidth;
+        const h = media.naturalHeight || media.videoHeight;
+        if (w && h && w > h * 1.05) slide.classList.add('horizontal');
+      };
+      if (it.kind === 'img') {
+        if (media.complete) checkAspect();
+        else media.addEventListener('load', checkAspect);
+      } else {
+        media.addEventListener('loadedmetadata', checkAspect);
+      }
+
+      track.appendChild(slide);
+
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (idx === 0 ? ' active' : '');
+      dot.addEventListener('click', () => {
+        cfPaused = true;
+        goCoverflow(idx);
+      });
+      dotsBox.appendChild(dot);
+    });
+
+    cfIndex = 0;
+    updateCoverflow();
+    startAutoRotate();
+  }
+
+  function updateCoverflow() {
+    const slides = document.querySelectorAll('.cf-slide');
+    const dots = document.querySelectorAll('.cf-dots .dot');
+    const total = museumPhotos.length;
+
+    slides.forEach((s, i) => {
+      const off = i - cfIndex;
+      const x = off * 220;
+      const z = -Math.abs(off) * 200;
+      const r = off * -28;
+      const o = Math.abs(off) > 3 ? 0 : 1 - Math.abs(off) * 0.18;
+      s.style.transform = `translateX(${x}px) translateZ(${z}px) rotateY(${r}deg)`;
+      s.style.opacity = o;
+      s.style.zIndex = total - Math.abs(off);
+
+      const vid = s.querySelector('video');
+      if (vid) {
+        if (i === cfIndex) vid.play().catch(()=>{});
+        else { vid.pause(); }
+      }
+    });
+    dots.forEach((d, n) => d.classList.toggle('active', n === cfIndex));
+
+    document.getElementById('cfCurrent').textContent = cfIndex + 1;
+    document.getElementById('navPrev').disabled = false;
+    document.getElementById('navNext').disabled = false;
+
+    // Кнопка "дальше" появляется когда дошли до конца
+    const cont = document.getElementById('continueBtn');
+    if (cfIndex >= total - 1 && total > 0) cont.classList.add('show');
+    else cont.classList.remove('show');
+  }
+
+  function goCoverflow(i) {
+    if (museumPhotos.length === 0) return;
+    cfIndex = (i + museumPhotos.length) % museumPhotos.length;
+    updateCoverflow();
+  }
+
+  function startAutoRotate() {
+    if (cfAutoTimer) clearInterval(cfAutoTimer);
+    cfAutoTimer = setInterval(() => {
+      if (cfPaused) return;
+      if (museumPhotos.length === 0) return;
+      cfIndex = (cfIndex + 1) % museumPhotos.length;
+      updateCoverflow();
+    }, 3500);
+  }
+
+  // Кнопки навигации — пауза автокрутки
+  document.getElementById('navPrev').addEventListener('click', () => { cfPaused = true; goCoverflow(cfIndex - 1); });
+  document.getElementById('navNext').addEventListener('click', () => { cfPaused = true; goCoverflow(cfIndex + 1); });
+
+  // Когда мышь над coverflow — пауза, ушла — снова
+  const coverflow = document.getElementById('coverflow');
+  coverflow.addEventListener('mouseenter', () => { cfPaused = true; });
+  coverflow.addEventListener('mouseleave', () => { cfPaused = false; });
+
+  // Свайпы / drag
+  let dragStart = null;
+  function dragStartH(x) { dragStart = { x, idx: cfIndex }; cfPaused = true; }
+  function dragMove(x) {
+    if (dragStart === null) return;
+  }
+  function dragEnd(x) {
+    if (dragStart === null) return;
+    const dx = x - dragStart.x;
+    if (Math.abs(dx) > 50) {
+      if (dx < 0) goCoverflow(cfIndex + 1);
+      else        goCoverflow(cfIndex - 1);
+    }
+    dragStart = null;
+  }
+  coverflow.addEventListener('mousedown', e => dragStartH(e.clientX));
+  coverflow.addEventListener('mousemove', e => dragMove(e.clientX));
+  coverflow.addEventListener('mouseup',   e => dragEnd(e.clientX));
+  coverflow.addEventListener('mouseleave', () => dragStart = null);
+  coverflow.addEventListener('touchstart', e => dragStartH(e.touches[0].clientX), { passive: true });
+  coverflow.addEventListener('touchend',   e => dragEnd(e.changedTouches[0].clientX), { passive: true });
+
+  // Клавиатура
+  document.addEventListener('keydown', e => {
+    if (!document.getElementById('sceneMuseum').classList.contains('active')) return;
+    cfPaused = true;
+    if (e.key === 'ArrowLeft')  goCoverflow(cfIndex - 1);
+    if (e.key === 'ArrowRight') {
+      if (cfIndex >= museumPhotos.length - 1) {
+        document.getElementById('continueBtn').click();
+      } else goCoverflow(cfIndex + 1);
+    }
+  });
+
+  document.getElementById('continueBtn').addEventListener('click', () => {
+    showScene('sceneFinale');
+    setTimeout(typeLetter, 800);
+  });
+
+  // ============ ПИСЬМО ============
+  function typeLetter() {
+    const target = document.getElementById('typewriter');
+    if (target.textContent.length > 0) return;
+    let i = 0;
+    const speed = 28;
+    function step() {
+      if (i < LETTER_TEXT.length) {
+        target.textContent += LETTER_TEXT[i++];
+        setTimeout(step, speed);
+      } else {
+        target.classList.add('done');
+        document.getElementById('signature').classList.add('show');
+        setTimeout(() => {
+          document.getElementById('musicCard').classList.add('show');
+          setTimeout(() => {
+            document.getElementById('finalMessage').classList.add('show');
+            setTimeout(() => {
+              const cat = document.getElementById('catCard');
+              if (cat && document.getElementById('catImg').src) cat.classList.add('show');
+            }, 1800);
+          }, 4000);
+        }, 600);
+      }
+    }
+    setTimeout(step, 500);
+  }
+
+  // ============ Локальная музыка mp3 ============
+  const audio = document.getElementById('audio');
+  audio.volume = 0.7;
+  audio.loop = true;
+
+  // Пробуем автоплей сразу
+  audio.play().then(() => {
+    document.getElementById('musicToggle').classList.add('show');
+    updatePlayerUI();
+  }).catch(() => {
+    // Браузер заблокировал — играем после первого касания
+    document.getElementById('musicToggle').classList.add('show');
+    const onFirstClick = () => {
+      audio.play().catch(err => console.warn('audio play failed:', err));
+      document.removeEventListener('click', onFirstClick, true);
+      document.removeEventListener('touchstart', onFirstClick, true);
+      document.removeEventListener('keydown', onFirstClick, true);
+    };
+    document.addEventListener('click', onFirstClick, true);
+    document.addEventListener('touchstart', onFirstClick, true);
+    document.addEventListener('keydown', onFirstClick, true);
+    updatePlayerUI();
+  });
+
+  audio.addEventListener('error', () => {
+    console.warn('[audio] error loading source. currentSrc=', audio.currentSrc);
+  });
+  audio.addEventListener('canplay', () => {
+    console.log('[audio] ready to play');
+  });
+
+  // Кнопка вкл/выкл музыки в углу
+  document.getElementById('musicToggle').addEventListener('click', () => {
+    if (audio.paused) audio.play().catch(()=>{});
+    else audio.pause();
+    updatePlayerUI();
+  });
+
+  audio.addEventListener('play',  updatePlayerUI);
+  audio.addEventListener('pause', updatePlayerUI);
+  audio.addEventListener('timeupdate', updateProgress);
+
+  function updatePlayerUI() {
+    const playing = !audio.paused && !audio.ended;
+    document.querySelectorAll('.player-play').forEach(el => {
+      el.innerHTML = playing
+        ? '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+    });
+    const vinyl = document.querySelector('.vinyl');
+    if (vinyl) vinyl.style.animationPlayState = playing ? 'running' : 'paused';
+  }
+  function updateProgress() {
+    const bar = document.querySelector('.player-progress-fill');
+    if (!bar || !audio.duration) return;
+    bar.style.width = (audio.currentTime / audio.duration * 100) + '%';
+  }
+
+  // Кнопка play/pause в карточке плеера
+  document.addEventListener('click', e => {
+    if (e.target.closest('.player-play-btn')) {
+      if (audio.paused) audio.play().catch(()=>{});
+      else audio.pause();
+      updatePlayerUI();
+    }
+  });
+</script>
+
+</body>
+</html>
